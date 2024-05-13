@@ -10,18 +10,21 @@ canvas.style.background = "#ff8";
 let mouseX = 0;
 let mouseY = 0;
 
-/* Función para obtener la posición del mouse en relación con el canvas */
-function xyMouse() {
-    let rect = canvas.getBoundingClientRect(); // Obtener el rectángulo del canvas
-    mouseX = event.clientX - rect.left; // Restar la posición del canvas en la ventana
-    mouseY = event.clientY - rect.top; // Restar la posición del canvas en la ventana
+let score = 0;
+let level = 1;
+let numCircles = 3;
+let gameFinished = false;
+
+function xyMouse(event) {
+    let rect = canvas.getBoundingClientRect(); 
+    mouseX = event.clientX - rect.left; 
+    mouseY = event.clientY - rect.top; 
 }
 
-/* Función para dibujar las coordenadas del mouse en el canvas */
 function drawMousePosition(context) {
     context.font = "20px Arial";
-    context.fillStyle = "#000"; // Establecer el color del texto
-    context.fillText("x: " + mouseX.toFixed(2) + " y: " + mouseY.toFixed(2), window_width - 200, 20); // Dibujar el texto
+    context.fillStyle = "#000"; 
+    context.fillText("x: " + mouseX.toFixed(2) + " y: " + mouseY.toFixed(2), window_width - 200, 20);
 }
 
 class Circle {
@@ -32,8 +35,8 @@ class Circle {
         this.color = color;
         this.text = text;
         this.speed = speed;
-        this.dx = (Math.random() < 0.5 ? -1 : 1) * this.speed;
-        this.dy = (Math.random() < 0.5 ? -1 : 1) * this.speed;
+        this.dx = 0;
+        this.dy = -this.speed;
     }
 
     draw(context) {
@@ -51,17 +54,17 @@ class Circle {
 
     update(context) {
         this.draw(context);
-
-        if ((this.posX + this.radius) > window_width || (this.posX - this.radius) < 0) {
-            this.dx = -this.dx;
-        }
-
-        if ((this.posY - this.radius) < 0 || (this.posY + this.radius) > window_height) {
-            this.dy = -this.dy;
-        }
-
         this.posX += this.dx;
         this.posY += this.dy;
+
+        if (this.posY + this.radius < 0) { 
+            this.reset();
+        }
+    }
+
+    reset() {
+        this.posX = Math.random() * window_width; 
+        this.posY = window_height + this.radius;
     }
 }
 
@@ -81,54 +84,67 @@ function getRandomColor() {
 }
 
 let circles = [];
-for (let i = 0; i < 10; i++) {
-    let randomX = Math.random() * (window_width - 100) + 50;
-    let randomY = Math.random() * (window_height - 100) + 50;
-    let randomRadius = 25 + Math.random() * 25;
-    let randomSpeed = 2 + Math.random() * 2;
-    circles.push(new Circle(randomX, randomY, randomRadius, getRandomColor(), (i + 1).toString(), randomSpeed));
+
+function createCircles() {
+    circles = [];
+    for (let i = 0; i < numCircles; i++) {
+        let randomX = Math.random() * window_width;
+        let randomRadius = 25 + Math.random() * 25;
+        let randomSpeed = 2 + Math.random() * 2;
+        circles.push(new Circle(randomX, window_height + randomRadius, randomRadius, getRandomColor(), (i + 1).toString(), randomSpeed));
+    }
 }
 
-circles.forEach(circle => circle.draw(ctx));
+function increaseLevel() {
+    if (level < 3) {
+        level++;
+        if (level === 2) {
+            numCircles = 5;
+        } else if (level === 3) {
+            numCircles = 10;
+        }
+    } else {
+        gameFinished = true;
+    }
+}
 
-let updateCircles = function () {
+function updateCircles() {
     requestAnimationFrame(updateCircles);
     ctx.clearRect(0, 0, window_width, window_height);
-    circles.forEach(circle => circle.update(ctx));
-    drawMousePosition(ctx); // Dibujar las coordenadas del mouse
-    for (let i = 0; i < circles.length; i++) {
-        for (let j = i + 1; j < circles.length; j++) {
-            if (getDistance(circles[i].posX, circles[j].posX, circles[i].posY, circles[j].posY) < circles[i].radius + circles[j].radius) {
-                let tempDx = circles[i].dx;
-                let tempDy = circles[i].dy;
-                circles[i].dx = circles[j].dx;
-                circles[i].dy = circles[j].dy;
-                circles[j].dx = tempDx;
-                circles[j].dy = tempDy;
 
-                circles[i].color = getRandomColor();
-                circles[j].color = getRandomColor();
+    if (!gameFinished) {
+        circles.forEach(circle => circle.update(ctx));
+        drawMousePosition(ctx); 
+
+        for (let i = 0; i < circles.length; i++) {
+            let distanceFromCenter = getDistance(mouseX, circles[i].posX, mouseY, circles[i].posY);
+            if (distanceFromCenter <= circles[i].radius) {
+                let distanceFromEdge = circles[i].radius - distanceFromCenter;
+                if (distanceFromEdge >= 0) { 
+                    circles.splice(i, 1);
+                    score++; 
+                    break; 
+                }
             }
         }
-    }
-};
 
-canvas.addEventListener("mousemove", xyMouse); // Agregar el evento de mouse
-
-canvas.addEventListener("click", function(event) {
-    let clickedX = event.clientX - canvas.getBoundingClientRect().left;
-    let clickedY = event.clientY - canvas.getBoundingClientRect().top;
-
-    for (let i = 0; i < circles.length; i++) {
-        let distanceFromCenter = getDistance(clickedX, circles[i].posX, clickedY, circles[i].posY);
-        if (distanceFromCenter <= circles[i].radius) {
-            let distanceFromEdge = circles[i].radius - distanceFromCenter;
-            if (distanceFromEdge >= 0) { // Si el clic está dentro del círculo
-                circles.splice(i, 1);
-                break; // Si ya se ha encontrado y eliminado un círculo, salir del bucle
-            }
+        if (circles.length === 0) {
+            increaseLevel();
+            createCircles();
         }
-    }
-});
 
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "#000";
+        ctx.fillText("Level: " + level, 20, 40); 
+        ctx.fillText("Score: " + score, 20, 60); 
+    } else {
+        ctx.font = "30px Arial";
+        ctx.fillStyle = "#000";
+        ctx.fillText("Game Over! Final Score: " + score, window_width / 2 - 200, window_height / 2); 
+    }
+}
+
+canvas.addEventListener("mousemove", xyMouse); 
+
+createCircles();
 updateCircles();
