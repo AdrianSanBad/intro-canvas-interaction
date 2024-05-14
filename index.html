@@ -3,11 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>interaccion de objetos</title>
+    <title>Canvas Example</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #canvas {
+            width: 75%;
+            height: auto;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="canvas" ></canvas>
+    <div class="container-fluid canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
     <script src="js/main.js"></script>
-    
 </body>
 </html>

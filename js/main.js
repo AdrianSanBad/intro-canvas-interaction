@@ -2,7 +2,7 @@ const canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
 const window_height = window.innerHeight;
-const window_width = window.innerWidth;
+const window_width = window.innerWidth * 0.75; // Ajustar el ancho al 75% del ancho de la ventana
 canvas.height = window_height;
 canvas.width = window_width;
 canvas.style.background = "#ff8";
@@ -108,6 +108,26 @@ function increaseLevel() {
     }
 }
 
+function handleClick(event) {
+    let rect = canvas.getBoundingClientRect(); 
+    let clickX = event.clientX - rect.left;
+    let clickY = event.clientY - rect.top;
+
+    for (let i = 0; i < circles.length; i++) {
+        let distanceFromCenter = getDistance(clickX, circles[i].posX, clickY, circles[i].posY);
+        if (distanceFromCenter <= circles[i].radius) {
+            circles.splice(i, 1);
+            score++; 
+            break; 
+        }
+    }
+
+    if (circles.length === 0) {
+        increaseLevel();
+        createCircles();
+    }
+}
+
 function updateCircles() {
     requestAnimationFrame(updateCircles);
     ctx.clearRect(0, 0, window_width, window_height);
@@ -116,35 +136,19 @@ function updateCircles() {
         circles.forEach(circle => circle.update(ctx));
         drawMousePosition(ctx); 
 
-        for (let i = 0; i < circles.length; i++) {
-            let distanceFromCenter = getDistance(mouseX, circles[i].posX, mouseY, circles[i].posY);
-            if (distanceFromCenter <= circles[i].radius) {
-                let distanceFromEdge = circles[i].radius - distanceFromCenter;
-                if (distanceFromEdge >= 0) { 
-                    circles.splice(i, 1);
-                    score++; 
-                    break; 
-                }
-            }
-        }
-
-        if (circles.length === 0) {
-            increaseLevel();
-            createCircles();
-        }
-
         ctx.font = "20px Arial";
         ctx.fillStyle = "#000";
-        ctx.fillText("Level: " + level, 20, 40); 
-        ctx.fillText("Score: " + score, 20, 60); 
+        ctx.fillText("Level: " + level, 50, 40); 
+        ctx.fillText("Score: " + score, 50, 60); 
     } else {
         ctx.font = "30px Arial";
         ctx.fillStyle = "#000";
-        ctx.fillText("Game Over! Final Score: " + score, window_width / 2 - 200, window_height / 2); 
+        ctx.fillText("juego terminado, puntuación: " + score, window_width / 2 - 200, window_height / 2); 
     }
 }
 
 canvas.addEventListener("mousemove", xyMouse); 
+canvas.addEventListener("click", handleClick); 
 
 createCircles();
 updateCircles();
