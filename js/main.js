@@ -13,7 +13,7 @@ let mouseY = 0;
 let score = 0;
 let level = 1;
 let numCircles = 3;
-let gameFinished = false;
+let juegoTerminado = false;
 
 function xyMouse(event) {
     let rect = canvas.getBoundingClientRect(); 
@@ -104,7 +104,7 @@ function increaseLevel() {
             numCircles = 10;
         }
     } else {
-        gameFinished = true;
+        juegoTerminado = true;
     }
 }
 
@@ -132,18 +132,18 @@ function updateCircles() {
     requestAnimationFrame(updateCircles);
     ctx.clearRect(0, 0, window_width, window_height);
 
-    if (!gameFinished) {
+    if (!juegoTerminado) {
         circles.forEach(circle => circle.update(ctx));
         drawMousePosition(ctx); 
 
         ctx.font = "20px Arial";
         ctx.fillStyle = "#000";
-        ctx.fillText("Level: " + level, 50, 40); 
-        ctx.fillText("Score: " + score, 50, 60); 
+        ctx.fillText("Nivel: " + level, 50, 40); 
+        ctx.fillText("Puntuación: " + score, 78, 60); 
     } else {
         ctx.font = "30px Arial";
         ctx.fillStyle = "#000";
-        ctx.fillText("juego terminado, puntuación: " + score, window_width / 2 - 200, window_height / 2); 
+        ctx.fillText("Juego terminado!, Puntuación: " + score, window_width / 2, window_height / 2); 
     }
 }
 
